@@ -1,109 +1,96 @@
-const wrapper = document.querySelector(".wrapper"),
-inputPart = document.querySelector(".input-part"),
-infoTxt = inputPart.querySelector(".info-txt"),
-inputField = inputPart.querySelector("input"),
-locationBtn = inputPart.querySelector(".wbtn"),
-enterBtn= inputPart.querySelector(".btn"),
-
-
-weatherPart = wrapper.querySelector(".weather-part"),
-wIcon = weatherPart.querySelector("img"),
-arrowBack = wrapper.querySelector("header i");
+const wrapper = document.querySelector(".wrapper");
+const inputPart = wrapper.querySelector(".input-part");
+const infoTxt = inputPart.querySelector(".info-txt");
+const inputField = inputPart.querySelector("input");
+const locationBtn = inputPart.querySelector(".wbtn");
+const enterBtn = inputPart.querySelector(".btn");
+const weatherPart = wrapper.querySelector(".weather-part");
+const wIcon = weatherPart.querySelector("img");
+const arrowBack = wrapper.querySelector("header i");
 
 let api;
 
-inputField.addEventListener("keyup", e =>{
-    // if user pressed enter btn and input value is not empty
-    if(e.key == "Enter" && inputField.value != ""){
-        requestApi(inputField.value);
-    }
+// Function to handle keyup event on input field
+inputField.addEventListener("keyup", (e) => {
+  if (e.key === "Enter" && inputField.value.trim() !== "") {
+    requestApi(inputField.value.trim());
+  }
 });
 
-enterBtn.addEventListener("click", () =>{
-    if(inputField.value != ""){
-        requestApi(inputField.value);
-    }
+// Function to handle click event on submit button
+enterBtn.addEventListener("click", () => {
+  if (inputField.value.trim() !== "") {
+    requestApi(inputField.value.trim());
+  }
 });
 
-locationBtn.addEventListener("click", () =>{
-    if(navigator.geolocation){ // if browser support geolocation api
-        navigator.geolocation.getCurrentPosition(onSuccess, onError);
-    }else{
-        alert("Your browser not support geolocation api");
-    }
-});
-
-function requestApi(city){
-    api = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=ef22685646035411a734039f1d2dfa01`;
-    fetchData();
-}
-
-function onSuccess(position){
-    const {latitude, longitude} = position.coords; // getting lat and lon of the user device from coords obj
-    api = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=ef22685646035411a734039f1d2dfa01`;
-    fetchData();
-}
-
-function onError(error){
-    // if any error occur while getting user location then we'll show it in infoText
-    infoTxt.innerText = error.message;
+// Function to handle click event on location button
+locationBtn.addEventListener("click", () => {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(onSuccess, onError);
+  } else {
+    infoTxt.innerText = "Your browser does not support geolocation API";
     infoTxt.classList.add("error");
+  }
+});
+
+// Function to request weather data from API
+function requestApi(location) {
+  api = `https://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=ef22685646035411a734039f1d2dfa01`;
+  fetchData();
 }
 
-function fetchData(){
-    infoTxt.innerText = "Getting weather details...";
-    infoTxt.classList.add("pending");
-    // getting api response and returning it with parsing into js obj and in another 
-    // then function calling weatherDetails function with passing api result as an argument
-    fetch(api).then(res => res.json()).then(result => weatherDetails(result)).catch(() =>{
-        infoTxt.innerText = "Something went wrong";
-        infoTxt.classList.replace("pending", "error");
+// Function to handle success response from geolocation API
+function onSuccess(position) {
+  const { latitude, longitude } = position.coords;
+  api = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=ef22685646035411a734039f1d2dfa01`;
+  fetchData();
+}
+
+// Function to handle error response from geolocation API
+function onError(error) {
+  infoTxt.innerText = error.message;
+  infoTxt.classList.add("error");
+}
+
+// Function to fetch weather data from API
+function fetchData() {
+  infoTxt.innerText = "Getting weather details...";
+  infoTxt.classList.add("pending");
+
+  fetch(api)
+    .then((res) => res.json())
+    .then((result) => weatherDetails(result))
+    .catch(() => {
+      infoTxt.innerText = "Something went wrong";
+      infoTxt.classList.replace("pending", "error");
     });
 }
 
-function weatherDetails(info){
-    if(info.cod == "404"){ // if user entered city name isn't valid
-        infoTxt.classList.replace("pending", "error");
-        infoTxt.innerText = `${inputField.value} isn't a valid city name`;
-    }else{
-        //getting required properties value from the whole weather information
-        const d=new Date();
-        const city = info.name;
-        const country = info.sys.country;
-        const {description, id} = info.weather[0];
-        const {temp, feels_like, humidity} = info.main;
+// Function to display weather details
+function weatherDetails(info) {
+  if (info.cod === "404") {
+    infoTxt.innerText = `${inputField.value.trim()} is not a valid city name`;
+    infoTxt.classList.add("error");
+  } else {
+    const { name: city, sys: { country }, weather: [{ description, id }], main: { temp, feels_like, humidity } } = info;
+    const iconId = id === 800 ? "01d" : (id >= 200 && id <= 232) ? "11d" : (id >= 600 && id <= 622) ? "13d" : (id >= 701 && id <= 781) ? "50d" : (id >= 801 && id <= 804) ? "10d" : "10d";
+    const iconUrl = `http://openweathermap.org/img/wn/${iconId}@2x.png`;
 
-        // using custom weather icon according to the id which api gives to us
-        if(id == 800){
-            wIcon.src = "http://openweathermap.org/img/wn/01d@2x.png";
-        }else if(id >= 200 && id <= 232){
-            wIcon.src = "http://openweathermap.org/img/wn/11d@2x.png";  
-        }else if(id >= 600 && id <= 622){
-            wIcon.src = "http://openweathermap.org/img/wn/13dd@2x.png";
-        }else if(id >= 701 && id <= 781){
-            wIcon.src = "http://openweathermap.org/img/wn/50d@2x.png";
-        }else if(id >= 801 && id <= 804){
-            wIcon.src = "http://openweathermap.org/img/wn/10d@2x.png";
-        }else if((id >= 500 && id <= 531) || (id >= 300 && id <= 321)){
-            wIcon.src = "http://openweathermap.org/img/wn/10d@2x.png";
-        }
-        
-        //passing a particular weather info to a particular element
-        weatherPart.querySelector(".temp .numb").innerText = Math.floor(temp);
-        weatherPart.querySelector(".weather").innerText = description;
-        weatherPart.querySelector(".location span").innerText = `${city}, ${country}`;
-        weatherPart.querySelector(".temp .numb-2").innerText = Math.floor(feels_like);
-        weatherPart.querySelector(".humidity span").innerText = `${humidity}%`;
-        infoTxt.classList.remove("pending", "error");
-        infoTxt.innerText = "";
-        inputField.value = "";
-        wrapper.classList.add("active");
-    }
+    wIcon.src = iconUrl;
+    weatherPart.querySelector(".temp .numb").innerText = Math.floor(temp);
+    weatherPart.querySelector(".weather").innerText = description;
+    weatherPart.querySelector(".location span").innerText = `${city}, ${country}`;
+    weatherPart.querySelector(".temp .numb-2").innerText = Math.floor(feels_like);
+    weatherPart.querySelector(".humidity span").innerText = `${humidity}%`;
+    infoTxt.classList.remove("pending", "error");
+    infoTxt.innerText = "";
+    inputField.value = "";
+    wrapper.classList.add("active");
+  }
 }
 
-
-
-
-arrowBack.addEventListener("click", ()=>{
-    wrapper.classList.remove("active");
+// Function to handle click event on arrow back button
+arrowBack.addEventListener("click", () => {
+  wrapper.classList.remove("active");
 });
