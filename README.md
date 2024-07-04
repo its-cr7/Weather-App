@@ -11,7 +11,7 @@ Check out the live demo of the Weather App [here](https://bit.ly/45758IK).
 - **Real-Time Weather Data:** Fetches current weather information for any city.
 - **Search Functionality:** Allows users to search for weather information by city name.
 - **Responsive Design:** Optimized for both desktop and mobile devices.
-- **Weather Details:** Displays temperature, weather condition, humidity, wind speed, and more.
+- **Weather Details:** Displays temperature, weather condition and more.
 - **Background Changes:** Dynamically changes background images based on the weather condition.
 
 ## Technologies Used
